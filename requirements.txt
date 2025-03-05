@@ -6,5 +6,4 @@ google-api-python-client
 oauth2client
 opencv-python-headless
 numpy
-cmake
-dlib
+face_recognition @ git+https://github.com/kimurakeigo/face_recognition.git
