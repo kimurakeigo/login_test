@@ -13,7 +13,6 @@ import re
 import cv2
 import numpy as np
 import io
-import face_recognition
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 
 st.write("Hello, world!")
