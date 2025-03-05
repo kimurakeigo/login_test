@@ -6,5 +6,7 @@ google-api-python-client
 oauth2client
 opencv-python-headless
 numpy
+face_recognition
+dlib-bin
 Pillow
 streamlit-webrtc
