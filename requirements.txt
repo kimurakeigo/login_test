@@ -6,7 +6,7 @@ google-api-python-client
 oauth2client
 opencv-python-headless
 numpy
-face_recognition --no-cache-dir
-dlib
+face_recognition 
+dlib-bin
 Pillow
 streamlit-webrtc
