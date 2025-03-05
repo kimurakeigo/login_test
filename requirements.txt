@@ -7,3 +7,4 @@ oauth2client
 opencv-python-headless
 numpy
 face_recognition @ git+https://github.com/kimurakeigo/face_recognition.git
+Pillow
