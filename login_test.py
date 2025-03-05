@@ -12,8 +12,6 @@ import hashlib
 import re
 import cv2
 import numpy as np
-import os
-import requests
 import io
 import face_recognition
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
