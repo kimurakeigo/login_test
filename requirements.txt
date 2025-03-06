@@ -6,7 +6,6 @@ google-api-python-client
 oauth2client
 opencv-python-headless
 numpy
-face_recognition 
-dlib-bin
+face_recognition @ git+https://github.com/kimurakeigo/face_recognition
 Pillow
 streamlit-webrtc
