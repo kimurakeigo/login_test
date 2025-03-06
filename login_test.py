@@ -541,9 +541,9 @@ def main():
 
         
                 elif choice == " ログアウト":
-                    for key in st.session_state.keys():  # すべてのセッション状態をクリア
-                        del st.session_state[key]
-                    st.session_state.authenticated = False  # 念のため authenticated を False に設定
+                    st.session_state.authenticated = False
+                    if "user_email" in st.session_state:
+                        del st.session_state["user_email"]
                     st.sidebar.success(" ログアウトしました")
                     st.rerun()
 if __name__ == "__main__":
