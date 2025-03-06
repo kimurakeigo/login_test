@@ -347,19 +347,6 @@ def main():
         st.session_state.authenticated = False
         
     
-    # if not st.session_state.authenticated:
-    #     st.sidebar.header("🔑 ログイン")
-    #     email = st.sidebar.text_input("📧 ユーザー名")
-    #     password = st.sidebar.text_input("🔒 パスワード", type="password")
-    #     if st.sidebar.button("ログイン", use_container_width=True):
-    #         if authenticate(email, password):
-    #             st.session_state.authenticated = True
-    #             st.sidebar.success("✅ ログイン成功！")
-    #             st.rerun()
-    #         else:
-    #             st.sidebar.error("❌ ログイン失敗")
-    #     return
-
     if not st.session_state.authenticated:
         st.sidebar.header(" ログイン")
         login_method = st.sidebar.radio("ログイン方法を選択してください", ("メールアドレスとパスワード", "カメラ認証"))
@@ -381,7 +368,7 @@ def main():
                 if email:
                     st.session_state.authenticated = True
                     st.session_state.user_email = email  # ユーザーのEmailをセッションに保存
-                    st.sidebar.success(f"✅ ログイン成功！ ({email})")  # Emailを表示
+                    st.sidebar.success(f"✅ ログイン成功！")  # Emailを表示
                     st.rerun()
                 else:
                     st.sidebar.error("❌ ログイン失敗")
