@@ -244,21 +244,41 @@ def load_users():
 #     return False
 
 # ログイン認証顔認証付き
-def authenticate(email, password, uploaded_image=None):
+# def authenticate(email, password, uploaded_image=None):
+#     users = load_users()
+#     hashed_input = hash_password(password)
+#     password_authenticated = any((np.array(users["Email"]) == email) & (np.array(users["Password"]) == hashed_input))
+
+#     face_authenticated = False
+#     if uploaded_image:
+#         registered_image_id = get_registered_image_id(email)
+#         if registered_image_id:
+#             registered_image = download_image_from_drive(registered_image_id)
+#             similarity = face_recognition(uploaded_image, registered_image)
+#             if similarity > 10:
+#                 face_authenticated = True
+
+#     return password_authenticated or face_authenticated
+
+def authenticate_email_password(email, password):
     users = load_users()
     hashed_input = hash_password(password)
-    password_authenticated = any((np.array(users["Email"]) == email) & (np.array(users["Password"]) == hashed_input))
+    if any((users['Email'] == email) & (users['Password'] == hashed_input)):
+        return True
+    return False
 
-    face_authenticated = False
-    if uploaded_image:
-        registered_image_id = get_registered_image_id(email)
+def authenticate_face(uploaded_image):
+    users = load_users()
+    for index, row in users.iterrows():
+        registered_image_id = row["FaceID"]
         if registered_image_id:
             registered_image = download_image_from_drive(registered_image_id)
             similarity = face_recognition(uploaded_image, registered_image)
             if similarity > 10:
-                face_authenticated = True
+                st.session_state.user_email = row["Email"] #必要であればメールアドレスもsession_stateに保存
+                return True
+    return False
 
-    return password_authenticated or face_authenticated
 
 def load_customers():
     sheet = client.open("SalonDatabase").worksheet("Customers")
@@ -342,20 +362,28 @@ def main():
     #     return
 
     if not st.session_state.authenticated:
-        st.sidebar.header("🔐 ログイン")
-        st.text("")
+        st.sidebar.header(" ログイン")
+        login_method = st.sidebar.radio("ログイン方法を選択してください", ("メールアドレスとパスワード", "カメラ認証"))
 
-        email = st.sidebar.text_input("📧 ユーザー")
-        password = st.sidebar.text_input("🔒 パスワード", type="password")
-        uploaded_file = st.sidebar.camera_input("📷 カメラで顔認証")
-
-        if st.sidebar.button("ログイン", use_container_width=True):
-            if authenticate(email, password, uploaded_file):
-                st.session_state.authenticated = True
-                st.sidebar.success("✅ ログイン成功！")
-                st.rerun()
-            else:
-                st.sidebar.error("❌ ログイン失敗")    
+        if login_method == "メールアドレスとパスワード":
+            email = st.sidebar.text_input(" ユーザー名")
+            password = st.sidebar.text_input(" パスワード", type="password")
+            if st.sidebar.button("ログイン", use_container_width=True):
+                if authenticate_email_password(email, password):
+                    st.session_state.authenticated = True
+                    st.sidebar.success("✅ ログイン成功！")
+                    st.rerun()
+                else:
+                    st.sidebar.error("❌ ログイン失敗")
+        else:
+            uploaded_image = st.sidebar.camera_input("カメラで撮影")
+            if st.sidebar.button("ログイン", use_container_width=True):
+                if authenticate_face(uploaded_image):
+                    st.session_state.authenticated = True
+                    st.sidebar.success("✅ ログイン成功！")
+                    st.rerun()
+                else:
+                    st.sidebar.error("❌ ログイン失敗")
         return
 
 
