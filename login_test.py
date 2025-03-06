@@ -120,6 +120,46 @@ def get_registered_image_id(user_email):
             return row[1]  # 画像ファイルIDを返す
 
     return None  # 該当するデータがない場合は None を返す
+
+
+# スプレッドシートからユーザーのメールアドレスを取得
+def get_user_email_from_image_id(image_id):
+    sheet = client.open("SalonUsers").sheet1
+    data = sheet.get_all_values()
+    for row in data[1:]:  # ヘッダー行をスキップ
+        if row[1] == image_id:  # 画像IDが一致する場合
+            return row[0]  # メールアドレスを返す
+    return None  # 該当するデータがない場合は None を返す
+
+
+class VideoTransformer(VideoTransformerBase):
+    def __init__(self):
+        self.authenticated = False
+
+    def transform(self, frame):
+        img = frame.to_ndarray(format="bgr24")
+        # 顔検出処理 (OpenCVなど)
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+        faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+
+        if len(faces) > 0:
+            # 顔が検出された場合、顔認証処理を実行
+            _, img_encoded = cv2.imencode('.jpg', img)
+            uploaded_image = io.BytesIO(img_encoded.tobytes())
+
+            for user_email in load_users()["Email"]:
+                registered_image_id = get_registered_image_id(user_email)
+                if registered_image_id:
+                    registered_image = download_image_from_drive(registered_image_id)
+                    similarity = face_recognition(uploaded_image, registered_image)
+                    if similarity > 10:
+                        self.authenticated = True
+                        st.session_state.authenticated = True
+                        st.session_state.user_email = user_email  # ユーザーのメールアドレスを保存
+                        st.rerun()  # ログイン成功後、アプリを再実行
+                        break
+        return img
   
 def upload_to_drive(file):
     try:
@@ -280,50 +320,13 @@ def main():
     st.set_page_config(page_title="美容院カルテ管理", layout="wide")
     st.title("💇‍♀️ 美容院カルテ")
 
-        # ✅ セッションステートに reload_data フラグを追加（初期値は False）
+    # ✅ セッションステートに reload_data フラグを追加（初期値は False）
     if "reload_data" not in st.session_state:
         st.session_state["reload_data"] = False
-
-    # # ✅ データの読み込み関数
-    # def reload_data():
-    #     st.session_state["reload_data"] = True
-
-    # # ✅ データの再読み込みボタンを追加
-    # st.button("🔄 データを再読み込み", on_click=reload_data)
-
-    # # ✅ データの読み込み（フラグが True のときのみ再読み込み）
-    # @st.cache_data(ttl=10)  # 10秒間キャッシュ
-    # def load_customers_cached():
-    #     return load_customers()
-
-    # df = load_customers_cached()
-
-    # if st.session_state["reload_data"]:
-    #     df_customers = load_customers()  # 顧客データの再読み込み
-    #     df_treatments = load_treatments()  # 施術履歴データの再読み込み
-    #     st.session_state["reload_data"] = False  # フラグをリセット
-    #     st.cache_data.clear()  # キャッシュをクリア
-    # else:
-    #     df_customers = load_customers()  
-    #     df_treatments = load_treatments() 
     
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
         
-    
-    # if not st.session_state.authenticated:
-    #     st.sidebar.header("🔑 ログイン")
-    #     email = st.sidebar.text_input("📧 ユーザー名")
-    #     password = st.sidebar.text_input("🔒 パスワード", type="password")
-    #     if st.sidebar.button("ログイン", use_container_width=True):
-    #         if authenticate(email, password):
-    #             st.session_state.authenticated = True
-    #             st.sidebar.success("✅ ログイン成功！")
-    #             st.rerun()
-    #         else:
-    #             st.sidebar.error("❌ ログイン失敗")
-    #     return
-
     if not st.session_state.authenticated:
         st.sidebar.header("🔐 ログイン")
         st.text("")
@@ -331,6 +334,8 @@ def main():
         email = st.sidebar.text_input("📧 ユーザー")
         password = st.sidebar.text_input("🔒 パスワード", type="password")
         uploaded_file = st.sidebar.camera_input("📷 カメラで顔認証")
+        webrtc_streamer(key="faceauth", video_transformer_factory=VideoTransformer)
+        return
 
         if st.sidebar.button("ログイン", use_container_width=True):
             if authenticate(email, password, uploaded_file):
