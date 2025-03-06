@@ -235,31 +235,6 @@ def load_users():
     data = sheet.get_all_records()
     return pd.DataFrame(data)
 
-#ログイン認証
-# def authenticate(email, password):
-#     users = load_users()
-#     hashed_input = hash_password(password)
-#     if any((users['Email'] == email) & (users['Password'] == hashed_input)):
-#         return True
-#     return False
-
-# ログイン認証顔認証付き
-# def authenticate(email, password, uploaded_image=None):
-#     users = load_users()
-#     hashed_input = hash_password(password)
-#     password_authenticated = any((np.array(users["Email"]) == email) & (np.array(users["Password"]) == hashed_input))
-
-#     face_authenticated = False
-#     if uploaded_image:
-#         registered_image_id = get_registered_image_id(email)
-#         if registered_image_id:
-#             registered_image = download_image_from_drive(registered_image_id)
-#             similarity = face_recognition(uploaded_image, registered_image)
-#             if similarity > 10:
-#                 face_authenticated = True
-
-#     return password_authenticated or face_authenticated
-
 def authenticate_email_password(email, password):
     users = load_users()
     hashed_input = hash_password(password)
@@ -337,7 +312,7 @@ def update_customer(old_name, updated_data):
 
 def main():
     st.set_page_config(page_title="美容院カルテ管理", layout="wide")
-    st.title("‍♀️ 美容院カルテ")
+    st.title("‍💇‍♀️ 美容院カルテ")
 
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
@@ -565,10 +540,11 @@ def main():
                     # st.rerun()
 
         
-                elif choice == "🚪 ログアウト":
-                    st.session_state.authenticated = False
-                    st.sidebar.success("🔓 ログアウトしました")
+                elif choice == " ログアウト":
+                    for key in st.session_state.keys():  # すべてのセッション状態をクリア
+                        del st.session_state[key]
+                    st.session_state.authenticated = False  # 念のため authenticated を False に設定
+                    st.sidebar.success(" ログアウトしました")
                     st.rerun()
-
 if __name__ == "__main__":
     main()
