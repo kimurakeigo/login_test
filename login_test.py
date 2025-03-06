@@ -13,7 +13,7 @@ import re
 import cv2
 import numpy as np
 import io
-from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
+from streamlit_webrtc import webrtc_streamer, VideoProcessorBase #VideoTransformerBaseからVideoProcessorBaseに変更
 
 # パスワードのハッシュ
 def hash_password(password):
@@ -132,11 +132,11 @@ def get_user_email_from_image_id(image_id):
     return None  # 該当するデータがない場合は None を返す
 
 
-class VideoTransformer(VideoTransformerBase):
+class VideoProcessor(VideoProcessorBase): #VideoTransformerBaseからVideoProcessorBaseに変更
     def __init__(self):
         self.authenticated = False
 
-    def transform(self, frame):
+    def recv(self, frame): #transformからrecvに変更
         img = frame.to_ndarray(format="bgr24")
         # 顔検出処理 (OpenCVなど)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -334,7 +334,7 @@ def main():
         email = st.sidebar.text_input("📧 ユーザー")
         password = st.sidebar.text_input("🔒 パスワード", type="password")
         # uploaded_file = st.sidebar.camera_input("📷 カメラで顔認証")
-        webrtc_streamer(key="faceauth", video_transformer_factory=VideoTransformer)
+        webrtc_streamer(key="faceauth", vvideo_processor_factory=VideoProcessor)
         return
 
         if st.sidebar.button("ログイン", use_container_width=True):
