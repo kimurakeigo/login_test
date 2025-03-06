@@ -311,19 +311,9 @@ def main():
     
     if not st.session_state.authenticated:
         st.sidebar.header(" ログイン")
-        login_method = st.sidebar.radio("ログイン方法を選択してください", ("メールアドレスとパスワード", "カメラ認証"))
+        login_method = st.sidebar.radio("ログイン方法を選択してください", ("カメラ認証","ユーザー名とパスワード",))
 
-        if login_method == "メールアドレスとパスワード":
-            email = st.sidebar.text_input(" ユーザー名")
-            password = st.sidebar.text_input(" パスワード", type="password")
-            if st.sidebar.button("ログイン", use_container_width=True):
-                if authenticate_email_password(email, password):
-                    st.session_state.authenticated = True
-                    st.sidebar.success("✅ ログイン成功！")
-                    st.rerun()
-                else:
-                    st.sidebar.error("❌ ログイン失敗")
-        else:
+        if login_method == "カメラで撮影":
             uploaded_image = st.sidebar.camera_input("カメラで撮影")
             if st.sidebar.button("ログイン", use_container_width=True):
                 email = authenticate_face(uploaded_image)
@@ -331,6 +321,16 @@ def main():
                     st.session_state.authenticated = True
                     st.session_state.user_email = email  # ユーザーのEmailをセッションに保存
                     st.sidebar.success(f"✅ ログイン成功！")  # Emailを表示
+                    st.rerun()
+                else:
+                    st.sidebar.error("❌ ログイン失敗")
+        else:
+            email = st.sidebar.text_input(" ユーザー名")
+            password = st.sidebar.text_input(" パスワード", type="password")
+            if st.sidebar.button("ログイン", use_container_width=True):
+                if authenticate_email_password(email, password):
+                    st.session_state.authenticated = True
+                    st.sidebar.success("✅ ログイン成功！")
                     st.rerun()
                 else:
                     st.sidebar.error("❌ ログイン失敗")
