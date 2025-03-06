@@ -346,48 +346,38 @@ def main():
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
         
-    
-    # if not st.session_state.authenticated:
-    #     st.sidebar.header("🔑 ログイン")
-    #     email = st.sidebar.text_input("📧 ユーザー名")
-    #     password = st.sidebar.text_input("🔒 パスワード", type="password")
-    #     if st.sidebar.button("ログイン", use_container_width=True):
-    #         if authenticate(email, password):
-    #             st.session_state.authenticated = True
-    #             st.sidebar.success("✅ ログイン成功！")
-    #             st.rerun()
-    #         else:
-    #             st.sidebar.error("❌ ログイン失敗")
-    #     return
-
     if not st.session_state.authenticated:
-        st.sidebar.header(" ログイン")
-        login_method = st.sidebar.radio("ログイン方法を選択してください", ("メールアドレスとパスワード", "カメラ認証"))
+        st.header(" ログイン")  # サイドバーからメイン画面に移動
+        login_method = st.radio("ログイン方法を選択してください", ("メールアドレスとパスワード", "カメラ認証"))
 
         if login_method == "メールアドレスとパスワード":
-            email = st.sidebar.text_input(" ユーザー名")
-            password = st.sidebar.text_input(" パスワード", type="password")
-            if st.sidebar.button("ログイン", use_container_width=True):
+            email = st.text_input(" ユーザー名")  # サイドバーからメイン画面に移動
+            password = st.text_input(" パスワード", type="password")  # サイドバーからメイン画面に移動
+            if st.button("ログイン", use_container_width=True):
                 if authenticate_email_password(email, password):
                     st.session_state.authenticated = True
-                    st.sidebar.success("✅ ログイン成功！")
+                    st.success("✅ ログイン成功！")
                     st.rerun()
                 else:
-                    st.sidebar.error("❌ ログイン失敗")
+                    st.error("❌ ログイン失敗")
         else:
-            uploaded_image = st.sidebar.camera_input("カメラで撮影")
-            if st.sidebar.button("ログイン", use_container_width=True):
+            uploaded_image = st.camera_input("カメラで撮影")  # サイドバーからメイン画面に移動
+            if st.button("ログイン", use_container_width=True):
                 email = authenticate_face(uploaded_image)
                 if email:
                     st.session_state.authenticated = True
-                    st.session_state.user_email = email  # ユーザーのEmailをセッションに保存
-                    st.sidebar.success(f"✅ ログイン成功！ ({email})")  # Emailを表示
+                    st.session_state.user_email = email
+                    st.success(f"✅ ログイン成功！ ({email})")
                     st.rerun()
                 else:
-                    st.sidebar.error("❌ ログイン失敗")
-        return
+                    st.error("❌ ログイン失敗")
+        # return  # ログインしていない場合はここで処理を終了
 
-
+    # ログイン後の処理
+    if st.session_state.authenticated:
+        # ログインユーザーの表示
+        if "user_email" in st.session_state:
+            st.sidebar.write(f"ログインユーザー: {st.session_state.user_email}")
     
     menu = ["👤 顧客情報", "✂️ 施術履歴", "🚪 ログアウト"]
     choice = st.sidebar.radio("メニュー", menu)
