@@ -337,22 +337,19 @@ def update_customer(old_name, updated_data):
 
 def main():
     st.set_page_config(page_title="美容院カルテ管理", layout="wide")
-    st.title("💇‍♀️ 美容院カルテ")
+    st.title("‍♀️ 美容院カルテ")
 
-    # ✅ セッションステートに reload_data フラグを追加（初期値は False）
-    if "reload_data" not in st.session_state:
-        st.session_state["reload_data"] = False
-    
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
-        
+
     if not st.session_state.authenticated:
-        st.header(" ログイン")  # サイドバーからメイン画面に移動
+        # ログインフォームを表示
+        st.header(" ログイン")
         login_method = st.radio("ログイン方法を選択してください", ("メールアドレスとパスワード", "カメラ認証"))
 
         if login_method == "メールアドレスとパスワード":
-            email = st.text_input(" ユーザー名")  # サイドバーからメイン画面に移動
-            password = st.text_input(" パスワード", type="password")  # サイドバーからメイン画面に移動
+            email = st.text_input(" ユーザー名")
+            password = st.text_input(" パスワード", type="password")
             if st.button("ログイン", use_container_width=True):
                 if authenticate_email_password(email, password):
                     st.session_state.authenticated = True
@@ -361,7 +358,7 @@ def main():
                 else:
                     st.error("❌ ログイン失敗")
         else:
-            uploaded_image = st.camera_input("カメラで撮影")  # サイドバーからメイン画面に移動
+            uploaded_image = st.camera_input("カメラで撮影")
             if st.button("ログイン", use_container_width=True):
                 email = authenticate_face(uploaded_image)
                 if email:
@@ -371,210 +368,207 @@ def main():
                     st.rerun()
                 else:
                     st.error("❌ ログイン失敗")
-        # return  # ログインしていない場合はここで処理を終了
-
-    # ログイン後の処理
-    if st.session_state.authenticated:
-        # ログインユーザーの表示
+    else:
+        # ログイン後の処理
         if "user_email" in st.session_state:
             st.sidebar.write(f"ログインユーザー: {st.session_state.user_email}")
     
-    menu = ["👤 顧客情報", "✂️ 施術履歴", "🚪 ログアウト"]
-    choice = st.sidebar.radio("メニュー", menu)
-    
-    if choice == "👤 顧客情報":
-        st.subheader("📋 顧客情報一覧")
-
-        @st.cache_data(ttl=60)  # 60秒間キャッシュ
-        def load_customers_cached():
-            return load_customers()
-
-        df = load_customers_cached()
-
-        search_query = st.text_input("🔍 検索（顧客名 または フリガナ）")
-        if search_query:
-            df = df[df["顧客名"].str.contains(search_query, na=False, case=False) |
-                    df["フリガナ"].str.contains(search_query, na=False, case=False)]
-        st.dataframe(df, use_container_width=True)
+        menu = ["👤 顧客情報", "✂️ 施術履歴", "🚪 ログアウト"]
+        choice = st.sidebar.radio("メニュー", menu)
         
-        with st.expander("➕ 顧客情報の追加"):
-            col1, col2 = st.columns(2)
-            with col1:
-                name = st.text_input("👤 顧客名")
-                furigana = st.text_input("🔤 フリガナ (カタカナのみ)", key="furigana_input")
-                # ひらがなをカタカナに自動変換
-                furigana = convert_to_katakana(furigana)
+        if choice == "👤 顧客情報":
+            st.subheader("📋 顧客情報一覧")
 
-                # カタカナ以外の文字が含まれていないかチェック
-                if not re.fullmatch(r"[ァ-ヶー]+", furigana) and furigana:
-                    st.warning("⚠ フリガナはカタカナのみで入力してください")
-                    furigana = ""  # 不正な入力をクリア
+            @st.cache_data(ttl=60)  # 60秒間キャッシュ
+            def load_customers_cached():
+                return load_customers()
 
-                # st.text(f"変換後: {furigana}")
+            df = load_customers_cached()
 
-                phone = st.text_input("📞 電話番号")
-                phone = format_phone_number(phone)  # 電話番号のフォーマット
-                st.text(f"変換後: {phone}")
-            with col2:
-                address = st.text_input("🏠 住所")
-                note = st.text_area("📝 メモ")
-            if st.button("追加", use_container_width=True):
-                if name:
-                    save_customer([name, furigana, str(phone), address, note])
-                    st.success(f"✅ {name} ({furigana}) を追加しました")
-                    st.session_state["customer_updated"] = True  # 更新フラグをセット
-                    # st.rerun()
-        with st.expander("✏️ 顧客情報の編集"):
-            df_customers = load_customers()
+            search_query = st.text_input("🔍 検索（顧客名 または フリガナ）")
+            if search_query:
+                df = df[df["顧客名"].str.contains(search_query, na=False, case=False) |
+                        df["フリガナ"].str.contains(search_query, na=False, case=False)]
+            st.dataframe(df, use_container_width=True)
             
-            if not df_customers.empty:
-                selected_name = st.selectbox("編集する顧客を選択", df_customers["顧客名"].tolist())
+            with st.expander("➕ 顧客情報の追加"):
+                col1, col2 = st.columns(2)
+                with col1:
+                    name = st.text_input("👤 顧客名")
+                    furigana = st.text_input("🔤 フリガナ (カタカナのみ)", key="furigana_input")
+                    # ひらがなをカタカナに自動変換
+                    furigana = convert_to_katakana(furigana)
 
-                # 選択した顧客の情報を取得
-                selected_customer = df_customers[df_customers["顧客名"] == selected_name].iloc[0]
+                    # カタカナ以外の文字が含まれていないかチェック
+                    if not re.fullmatch(r"[ァ-ヶー]+", furigana) and furigana:
+                        st.warning("⚠ フリガナはカタカナのみで入力してください")
+                        furigana = ""  # 不正な入力をクリア
 
-                # フォームの初期値（key を追加）
-                new_name = st.text_input("👤 顧客名", selected_customer["顧客名"], key="edit_name")
-                new_furigana = st.text_input("🔤 フリガナ", selected_customer["フリガナ"], key="edit_furigana")
-                new_phone = st.text_input("📞 電話番号", str(selected_customer["電話番号"]), key="edit_phone")  # str に変換
-                new_address = st.text_input("🏠 住所", selected_customer["住所"], key="edit_address")
-                new_note = st.text_area("📝 メモ", selected_customer["メモ"], key="edit_note")
+                    # st.text(f"変換後: {furigana}")
 
-                if st.button("更新"):
-                    update_customer(selected_name, [new_name, new_furigana, new_phone, new_address, new_note])
-                    st.success(f"✅ {selected_name} ({new_furigana}) の情報を更新しました")
-                    st.session_state["customer_updated"] = True
-                    st.rerun()
-
-        # 顧客情報の削除
-        with st.expander("❌ 顧客情報の削除"):
-            delete_name = st.selectbox("削除する顧客を選択", df['顧客名'] if not df.empty else [])
-            if st.button("削除", use_container_width=True):
-                if delete_name:
-                    delete_customer(delete_name)
-                    st.success(f"✅ {delete_name} を削除しました")
-                    st.session_state["customer_updated"] = True  # 更新フラグをセット
-                    # st.rerun()
-
-      
-    elif choice == "✂️ 施術履歴":
-        st.subheader("📜 施術履歴一覧")
-
-        @st.cache_data(ttl=60)  # API呼び出しを減らす
-        def load_treatments_cached():
-            # return load_treatments()
-            return load_treatments_with_furigana()
-        
-        df_treatments = load_treatments_cached()
-        df_customers = load_customers()
-
-        # 日付カラムを適切なデータ型に変換
-        if "施術日" in df_treatments.columns:
-            df_treatments["施術日"] = pd.to_datetime(df_treatments["施術日"], errors="coerce").dt.strftime("%Y-%m-%d")
-
-        # 🔍 検索機能（AND検索 & 日付検索対応）
-        search_query = st.text_input("🔍 検索（スペース区切りでAND検索、日付も可）")
-
-        if search_query:
-            search_columns = ["顧客名","フリガナ", "施術内容", "施術メモ", "日付"]  # 🔥 日付も検索対象に追加
-            df_treatments = df_treatments.dropna(subset=search_columns)  # NaNを除去
-
-            # スペース区切りでキーワードをリスト化
-            keywords = search_query.split()
-
-            # すべてのキーワードを含む行のみ抽出（AND検索）
-            for keyword in keywords:
-                df_treatments = df_treatments[
-                    df_treatments[search_columns].apply(lambda row: row.astype(str).str.contains(keyword, case=False, na=False).any(), axis=1)
-                ]
-
-        # DataFrame のカラム名を変更（写真 → 画像URL）
-        df_treatments.rename(columns={"写真": "画像URL"}, inplace=True)
-
-        # StreamlitのDataFrame表示でリンクを設定
-        st.dataframe(
-            df_treatments,
-            column_config={
-                "画像URL": st.column_config.LinkColumn("📸 施術写真"),
-            },
-            use_container_width=True
-        )
-
-
-
-        with st.expander("➕ 施術履歴の追加"):
-            customer_names = df_customers["顧客名"].tolist()
-            customer_name = st.selectbox("👤 顧客名", customer_names)
-            treatment = st.text_input("✂️ 施術内容")
-            date = st.date_input("📅 施術日")
-            note = st.text_area("📝 施術メモ")
-            photo = st.file_uploader("🖼️ 写真アップロード（Google Drive）", type=["jpg", "jpeg", "png"])
-
-            if st.button("施術履歴を追加"):
-                file_url = None
-                if photo:
-                    st.image(photo, caption="アップロード画像", width=200)
-                    try:
-                        file_url = upload_to_drive(photo)
-                        st.success("✅ アップロード完了！")
-                    except Exception as e:
-                        st.error(f"❌ 画像のアップロードに失敗しました: {e}")
+                    phone = st.text_input("📞 電話番号")
+                    phone = format_phone_number(phone)  # 電話番号のフォーマット
+                    st.text(f"変換後: {phone}")
+                with col2:
+                    address = st.text_input("🏠 住所")
+                    note = st.text_area("📝 メモ")
+                if st.button("追加", use_container_width=True):
+                    if name:
+                        save_customer([name, furigana, str(phone), address, note])
+                        st.success(f"✅ {name} ({furigana}) を追加しました")
+                        st.session_state["customer_updated"] = True  # 更新フラグをセット
+                        # st.rerun()
+            with st.expander("✏️ 顧客情報の編集"):
+                df_customers = load_customers()
                 
-                if customer_name and treatment:
-                    save_treatment([customer_name, treatment, str(date), file_url, note])
-                    st.success(f"✅ {customer_name} の施術履歴を追加しました")
+                if not df_customers.empty:
+                    selected_name = st.selectbox("編集する顧客を選択", df_customers["顧客名"].tolist())
+
+                    # 選択した顧客の情報を取得
+                    selected_customer = df_customers[df_customers["顧客名"] == selected_name].iloc[0]
+
+                    # フォームの初期値（key を追加）
+                    new_name = st.text_input("👤 顧客名", selected_customer["顧客名"], key="edit_name")
+                    new_furigana = st.text_input("🔤 フリガナ", selected_customer["フリガナ"], key="edit_furigana")
+                    new_phone = st.text_input("📞 電話番号", str(selected_customer["電話番号"]), key="edit_phone")  # str に変換
+                    new_address = st.text_input("🏠 住所", selected_customer["住所"], key="edit_address")
+                    new_note = st.text_area("📝 メモ", selected_customer["メモ"], key="edit_note")
+
+                    if st.button("更新"):
+                        update_customer(selected_name, [new_name, new_furigana, new_phone, new_address, new_note])
+                        st.success(f"✅ {selected_name} ({new_furigana}) の情報を更新しました")
+                        st.session_state["customer_updated"] = True
+                        st.rerun()
+
+            # 顧客情報の削除
+            with st.expander("❌ 顧客情報の削除"):
+                delete_name = st.selectbox("削除する顧客を選択", df['顧客名'] if not df.empty else [])
+                if st.button("削除", use_container_width=True):
+                    if delete_name:
+                        delete_customer(delete_name)
+                        st.success(f"✅ {delete_name} を削除しました")
+                        st.session_state["customer_updated"] = True  # 更新フラグをセット
+                        # st.rerun()
+
+        
+        elif choice == "✂️ 施術履歴":
+            st.subheader("📜 施術履歴一覧")
+
+            @st.cache_data(ttl=60)  # API呼び出しを減らす
+            def load_treatments_cached():
+                # return load_treatments()
+                return load_treatments_with_furigana()
+            
+            df_treatments = load_treatments_cached()
+            df_customers = load_customers()
+
+            # 日付カラムを適切なデータ型に変換
+            if "施術日" in df_treatments.columns:
+                df_treatments["施術日"] = pd.to_datetime(df_treatments["施術日"], errors="coerce").dt.strftime("%Y-%m-%d")
+
+            # 🔍 検索機能（AND検索 & 日付検索対応）
+            search_query = st.text_input("🔍 検索（スペース区切りでAND検索、日付も可）")
+
+            if search_query:
+                search_columns = ["顧客名","フリガナ", "施術内容", "施術メモ", "日付"]  # 🔥 日付も検索対象に追加
+                df_treatments = df_treatments.dropna(subset=search_columns)  # NaNを除去
+
+                # スペース区切りでキーワードをリスト化
+                keywords = search_query.split()
+
+                # すべてのキーワードを含む行のみ抽出（AND検索）
+                for keyword in keywords:
+                    df_treatments = df_treatments[
+                        df_treatments[search_columns].apply(lambda row: row.astype(str).str.contains(keyword, case=False, na=False).any(), axis=1)
+                    ]
+
+            # DataFrame のカラム名を変更（写真 → 画像URL）
+            df_treatments.rename(columns={"写真": "画像URL"}, inplace=True)
+
+            # StreamlitのDataFrame表示でリンクを設定
+            st.dataframe(
+                df_treatments,
+                column_config={
+                    "画像URL": st.column_config.LinkColumn("📸 施術写真"),
+                },
+                use_container_width=True
+            )
+
+
+
+            with st.expander("➕ 施術履歴の追加"):
+                customer_names = df_customers["顧客名"].tolist()
+                customer_name = st.selectbox("👤 顧客名", customer_names)
+                treatment = st.text_input("✂️ 施術内容")
+                date = st.date_input("📅 施術日")
+                note = st.text_area("📝 施術メモ")
+                photo = st.file_uploader("🖼️ 写真アップロード（Google Drive）", type=["jpg", "jpeg", "png"])
+
+                if st.button("施術履歴を追加"):
+                    file_url = None
+                    if photo:
+                        st.image(photo, caption="アップロード画像", width=200)
+                        try:
+                            file_url = upload_to_drive(photo)
+                            st.success("✅ アップロード完了！")
+                        except Exception as e:
+                            st.error(f"❌ 画像のアップロードに失敗しました: {e}")
+                    
+                    if customer_name and treatment:
+                        save_treatment([customer_name, treatment, str(date), file_url, note])
+                        st.success(f"✅ {customer_name} の施術履歴を追加しました")
+                        st.session_state["customer_updated"] = True  # 更新フラグをセット
+                        # st.rerun()
+
+            with st.expander("✏️ 施術履歴の編集"):
+                # 編集用の選択肢を作成（顧客名 | 施術内容 | 施術日）
+                df_treatments["編集候補"] = df_treatments.apply(
+                    lambda row: f"{row['顧客名']} | {row['施術内容']} | {row['日付']}", axis=1
+                )
+
+                # 施術履歴を選択
+                edit_option = st.selectbox("✏️ 編集する施術履歴を選択", df_treatments["編集候補"].tolist())
+
+                if edit_option:
+                    # 選択されたデータを取得
+                    selected_row = df_treatments[df_treatments["編集候補"] == edit_option].iloc[0]
+
+                    # 入力フォーム
+                    new_treatment = st.text_input("施術内容", selected_row["施術内容"])
+                    new_date = st.date_input("日付", pd.to_datetime(selected_row["日付"], errors="coerce"))
+                    new_memo = st.text_area("施術メモ", selected_row["施術メモ"])
+
+                    if st.button("💾 保存"):
+                        # データを更新
+                        update_treatment(selected_row["顧客名"], new_treatment, new_date, new_memo)
+                        st.success("✅ 施術履歴を更新しました！")
+                        st.session_state["customer_updated"] = True  # 更新フラグをセット
+                        
+
+            with st.expander("🗑️ 施術履歴の削除"):
+                # 削除用の選択肢を作成（顧客名 | 施術内容 | 施術日）
+                df_treatments["削除候補"] = df_treatments.apply(
+                    lambda row: f"{row['顧客名']} | {row['施術内容']} | {row['日付']}", axis=1
+                )
+
+                # 施術履歴を選択肢に表示
+                delete_option = st.selectbox("👤 削除する施術履歴を選択", df_treatments["削除候補"].tolist())
+
+                # 削除処理
+                if st.button("❌ 削除"):
+                    # 選択されたデータを元に、元の `顧客名` を取得
+                    delete_name = delete_option.split(" | ")[0]  # 顧客名を取得
+                    delete_treatment(delete_name)  # 削除関数を実行
+
+                    st.success(f"🗑️ {delete_option} の施術履歴を削除しました")
                     st.session_state["customer_updated"] = True  # 更新フラグをセット
                     # st.rerun()
 
-        with st.expander("✏️ 施術履歴の編集"):
-            # 編集用の選択肢を作成（顧客名 | 施術内容 | 施術日）
-            df_treatments["編集候補"] = df_treatments.apply(
-                lambda row: f"{row['顧客名']} | {row['施術内容']} | {row['日付']}", axis=1
-            )
-
-            # 施術履歴を選択
-            edit_option = st.selectbox("✏️ 編集する施術履歴を選択", df_treatments["編集候補"].tolist())
-
-            if edit_option:
-                # 選択されたデータを取得
-                selected_row = df_treatments[df_treatments["編集候補"] == edit_option].iloc[0]
-
-                # 入力フォーム
-                new_treatment = st.text_input("施術内容", selected_row["施術内容"])
-                new_date = st.date_input("日付", pd.to_datetime(selected_row["日付"], errors="coerce"))
-                new_memo = st.text_area("施術メモ", selected_row["施術メモ"])
-
-                if st.button("💾 保存"):
-                    # データを更新
-                    update_treatment(selected_row["顧客名"], new_treatment, new_date, new_memo)
-                    st.success("✅ 施術履歴を更新しました！")
-                    st.session_state["customer_updated"] = True  # 更新フラグをセット
-                    
-
-        with st.expander("🗑️ 施術履歴の削除"):
-            # 削除用の選択肢を作成（顧客名 | 施術内容 | 施術日）
-            df_treatments["削除候補"] = df_treatments.apply(
-                lambda row: f"{row['顧客名']} | {row['施術内容']} | {row['日付']}", axis=1
-            )
-
-            # 施術履歴を選択肢に表示
-            delete_option = st.selectbox("👤 削除する施術履歴を選択", df_treatments["削除候補"].tolist())
-
-            # 削除処理
-            if st.button("❌ 削除"):
-                # 選択されたデータを元に、元の `顧客名` を取得
-                delete_name = delete_option.split(" | ")[0]  # 顧客名を取得
-                delete_treatment(delete_name)  # 削除関数を実行
-
-                st.success(f"🗑️ {delete_option} の施術履歴を削除しました")
-                st.session_state["customer_updated"] = True  # 更新フラグをセット
-                # st.rerun()
-
         
-    elif choice == "🚪 ログアウト":
-        st.session_state.authenticated = False
-        st.sidebar.success("🔓 ログアウトしました")
-        st.rerun()
+                elif choice == "🚪 ログアウト":
+                    st.session_state.authenticated = False
+                    st.sidebar.success("🔓 ログアウトしました")
+                    st.rerun()
 
 if __name__ == "__main__":
     main()
