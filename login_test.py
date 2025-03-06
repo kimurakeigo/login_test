@@ -334,7 +334,7 @@ def main():
         email = st.sidebar.text_input("📧 ユーザー")
         password = st.sidebar.text_input("🔒 パスワード", type="password")
         # uploaded_file = st.sidebar.camera_input("📷 カメラで顔認証")
-        webrtc_streamer(key="faceauth", vvideo_processor_factory=VideoProcessor)
+        webrtc_streamer(key="faceauth", video_processor_factory=VideoProcessor) # vvideo_processor_factory を video_processor_factory に修正
         return
 
         if st.sidebar.button("ログイン", use_container_width=True):
