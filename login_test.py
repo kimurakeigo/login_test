@@ -13,7 +13,6 @@ import re
 import cv2
 import numpy as np
 import io
-from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 
 # パスワードのハッシュ
 def hash_password(password):
@@ -130,36 +129,6 @@ def get_user_email_from_image_id(image_id):
         if row[1] == image_id:  # 画像IDが一致する場合
             return row[0]  # メールアドレスを返す
     return None  # 該当するデータがない場合は None を返す
-
-
-class VideoTransformer(VideoTransformerBase):
-    def __init__(self):
-        self.authenticated = False
-
-    def transform(self, frame):
-        img = frame.to_ndarray(format="bgr24")
-        # 顔検出処理 (OpenCVなど)
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-        faces = face_cascade.detectMultiScale(gray, 1.3, 5)
-
-        if len(faces) > 0:
-            # 顔が検出された場合、顔認証処理を実行
-            _, img_encoded = cv2.imencode('.jpg', img)
-            uploaded_image = io.BytesIO(img_encoded.tobytes())
-
-            for user_email in load_users()["Email"]:
-                registered_image_id = get_registered_image_id(user_email)
-                if registered_image_id:
-                    registered_image = download_image_from_drive(registered_image_id)
-                    similarity = face_recognition(uploaded_image, registered_image)
-                    if similarity > 10:
-                        self.authenticated = True
-                        st.session_state.authenticated = True
-                        st.session_state.user_email = user_email  # ユーザーのメールアドレスを保存
-                        st.rerun()  # ログイン成功後、アプリを再実行
-                        break
-        return img
   
 def upload_to_drive(file):
     try:
@@ -234,31 +203,6 @@ def load_users():
     sheet = client.open("SalonUsers").sheet1
     data = sheet.get_all_records()
     return pd.DataFrame(data)
-
-#ログイン認証
-# def authenticate(email, password):
-#     users = load_users()
-#     hashed_input = hash_password(password)
-#     if any((users['Email'] == email) & (users['Password'] == hashed_input)):
-#         return True
-#     return False
-
-# ログイン認証顔認証付き
-# def authenticate(email, password, uploaded_image=None):
-#     users = load_users()
-#     hashed_input = hash_password(password)
-#     password_authenticated = any((np.array(users["Email"]) == email) & (np.array(users["Password"]) == hashed_input))
-
-#     face_authenticated = False
-#     if uploaded_image:
-#         registered_image_id = get_registered_image_id(email)
-#         if registered_image_id:
-#             registered_image = download_image_from_drive(registered_image_id)
-#             similarity = face_recognition(uploaded_image, registered_image)
-#             if similarity > 10:
-#                 face_authenticated = True
-
-#     return password_authenticated or face_authenticated
 
 def authenticate_email_password(email, password):
     users = load_users()

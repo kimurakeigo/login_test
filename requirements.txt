@@ -8,5 +8,4 @@ opencv-python-headless
 numpy
 face_recognition @ git+https://github.com/kimurakeigo/face_recognition
 Pillow
-streamlit-webrtc
-cryptography==41.0.3
+
