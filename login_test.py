@@ -237,6 +237,7 @@ def authenticate_face(uploaded_image):
 
     except Exception as e:
         st.error(f"予期せぬエラーが発生しました: {e}")
+        st.error(f"Clearphotoを押して再度顔を認証してみてください")
         return None
 
 
