@@ -545,6 +545,6 @@ def main():
                     if "user_email" in st.session_state:
                         del st.session_state["user_email"]
                     st.sidebar.success(" ログアウトしました")
-                    st.rerun()
+                    st.experimental_rerun()  # st.rerun() の代わりに st.experimental_rerun() を使用
 if __name__ == "__main__":
     main()
