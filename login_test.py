@@ -218,7 +218,7 @@ def authenticate_face(uploaded_image):
         if registered_image_id:
             registered_image = download_image_from_drive(registered_image_id)
             similarity = face_recognition(uploaded_image, registered_image)
-            if similarity > 10:
+            if similarity > 1:
                 return row["Email"]  # 認証成功時にEmailを返す
     return None  # 認証失敗時にNoneを返す
 
