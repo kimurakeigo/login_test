@@ -212,15 +212,32 @@ def authenticate_email_password(email, password):
     return False
 
 def authenticate_face(uploaded_image):
-    users = load_users()
-    for index, row in users.iterrows():
-        registered_image_id = row["FaceID"]
-        if registered_image_id:
-            registered_image = download_image_from_drive(registered_image_id)
-            similarity = face_recognition(uploaded_image, registered_image)
-            if similarity > 1:
-                return row["Email"]  # 認証成功時にEmailを返す
-    return None  # 認証失敗時にNoneを返す
+    try:
+        users = load_users()
+        if users is None:
+            st.error("ユーザーデータの読み込みに失敗しました。")
+            return None
+
+        for index, row in users.iterrows():
+            registered_image_id = row["FaceID"]
+            if registered_image_id:
+                registered_image = download_image_from_drive(registered_image_id)
+                if registered_image is None:
+                    st.error(f"登録画像 ({registered_image_id}) のダウンロードに失敗しました。")
+                    continue  # 次のユーザーへ
+
+                similarity = face_recognition(uploaded_image, registered_image)
+                if similarity is None:
+                    st.error("顔認識処理でエラーが発生しました。")
+                    continue # 次のユーザーへ
+
+                if similarity > 1:
+                    return row["Email"]  # 認証成功時にEmailを返す
+        return None  # 認証失敗時にNoneを返す
+
+    except Exception as e:
+        st.error(f"予期せぬエラーが発生しました: {e}")
+        return None
 
 
 def load_customers():
