@@ -311,7 +311,7 @@ def main():
     
     if not st.session_state.authenticated:
         st.sidebar.header(" ログイン")
-        login_method = st.sidebar.radio("ログイン方法を選択してください", ("カメラ認証","ユーザー名とパスワード",))
+        login_method = st.sidebar.radio("ログイン方法を選択してください", ("パスワード", "カメラ認証"))
 
         if login_method == "カメラで撮影":
             uploaded_image = st.sidebar.camera_input("カメラで撮影")
