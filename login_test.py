@@ -275,9 +275,8 @@ def authenticate_face(uploaded_image):
             registered_image = download_image_from_drive(registered_image_id)
             similarity = face_recognition(uploaded_image, registered_image)
             if similarity > 10:
-                st.session_state.user_email = row["Email"] #必要であればメールアドレスもsession_stateに保存
-                return True
-    return False
+                return row["Email"]  # 認証成功時にEmailを返す
+    return None  # 認証失敗時にNoneを返す
 
 
 def load_customers():
@@ -378,9 +377,11 @@ def main():
         else:
             uploaded_image = st.sidebar.camera_input("カメラで撮影")
             if st.sidebar.button("ログイン", use_container_width=True):
-                if authenticate_face(uploaded_image):
+                email = authenticate_face(uploaded_image)
+                if email:
                     st.session_state.authenticated = True
-                    st.sidebar.success("✅ ログイン成功！")
+                    st.session_state.user_email = email  # ユーザーのEmailをセッションに保存
+                    st.sidebar.success(f"✅ ログイン成功！ ({email})")  # Emailを表示
                     st.rerun()
                 else:
                     st.sidebar.error("❌ ログイン失敗")
